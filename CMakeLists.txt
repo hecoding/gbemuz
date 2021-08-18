@@ -3,4 +3,4 @@ project(gbemuz)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(gbemuz main.cpp)
+add_executable(gbemuz main.cpp definitions.hpp cartridge.hpp cpu.hpp mmu.hpp)

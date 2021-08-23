@@ -48,6 +48,13 @@ struct Registers {
     u16 pc;
 };
 
+enum class Flag {
+    Zero = 1 << 7,
+    Negative = 1 << 6,
+    HalfCarry = 1 << 5,
+    Carry = 1 << 4,
+};
+
 class CPU {
 public:
     explicit CPU(MMU& mmu) : mmu(mmu) {}
@@ -70,23 +77,47 @@ private:
             case 0x00: break;
             case 0x01: ld_rp_nn<0>(); break;
             case 0x02: ldid_a_nn<0>(); break;
+            case 0x03: inc_rr<0>(); break;
+            case 0x04: inc_r<0>(); break;
+            case 0x05: dec_r<0>(); break;
             case 0x06: ld_r_n<0>(); break;
             case 0x0a: ldid_nn_a<0>(); break;
+            case 0x0b: dec_rr<0>(); break;
+            case 0x0c: inc_r<1>(); break;
+            case 0x0d: dec_r<1>(); break;
             case 0x0e: ld_r_n<1>(); break;
             case 0x11: ld_rp_nn<1>(); break;
             case 0x12: ldid_a_nn<1>(); break;
+            case 0x13: inc_rr<1>(); break;
+            case 0x14: inc_r<2>(); break;
+            case 0x15: dec_r<2>(); break;
             case 0x16: ld_r_n<2>(); break;
             case 0x1a: ldid_nn_a<1>(); break;
+            case 0x1b: dec_rr<1>(); break;
+            case 0x1c: inc_r<3>(); break;
+            case 0x1d: dec_r<3>(); break;
             case 0x1e: ld_r_n<3>(); break;
             case 0x21: ld_rp_nn<2>(); break;
             case 0x22: ldid_a_nn<2>(); break;
+            case 0x23: inc_rr<2>(); break;
+            case 0x24: inc_r<4>(); break;
+            case 0x25: dec_r<4>(); break;
             case 0x26: ld_r_n<4>(); break;
             case 0x2a: ldid_nn_a<2>(); break;
+            case 0x2b: dec_rr<2>(); break;
+            case 0x2c: inc_r<5>(); break;
+            case 0x2d: dec_r<5>(); break;
             case 0x2e: ld_r_n<5>(); break;
             case 0x31: ld_rp_nn<3>(); break;
             case 0x32: ldid_a_nn<3>(); break;
+            case 0x33: inc_rr<3>(); break;
+            case 0x34: inc_r<6>(); break;
+            case 0x35: dec_r<6>(); break;
             case 0x36: ld_r_n<6>(); break;
             case 0x3a: ldid_nn_a<3>(); break;
+            case 0x3b: dec_rr<3>(); break;
+            case 0x3c: inc_r<7>(); break;
+            case 0x3d: dec_r<7>(); break;
             case 0x3e: ld_r_n<7>(); break;
             case 0x40: ld_r1_r2<0, 0>(); break; case 0x41: ld_r1_r2<0, 1>(); break; case 0x42: ld_r1_r2<0, 2>(); break;
             case 0x43: ld_r1_r2<0, 3>(); break; case 0x44: ld_r1_r2<0, 4>(); break; case 0x45: ld_r1_r2<0, 5>(); break;
@@ -118,16 +149,20 @@ private:
 
     template <u8 r>
     void inc_r() {
-        r_set<r>(r_get<r>()++);
+        r_set<r>(r_get<r>() + 1);
 
-        flags
+        set_bit(Flag::Zero, CPU::is_result_zero(r_get<r>()));
+        set_bit(Flag::Negative, false);
+        set_bit(Flag::HalfCarry, CPU::is_carry_from_bit(3, r_get<r>(), 1));
     }
 
     template <u8 r>
     void dec_r() {
-        r_set<r>(r_get<r>()--);
+        r_set<r>(r_get<r>() - 1);
 
-        flags
+        set_bit(Flag::Zero, CPU::is_result_zero(r_get<r>()));
+        set_bit(Flag::Negative, true);
+        set_bit(Flag::HalfCarry, CPU::is_no_borrow_from_bit(4, r_get<r>(), 1));
     }
 
     template <u8 r>
@@ -179,21 +214,21 @@ private:
     template <u8 p>
     u8 r_get() {
         if constexpr (p == 0)
-        return registers.b;
+            return registers.b;
         else if constexpr (p == 1)
-        return registers.c;
+            return registers.c;
         else if constexpr (p == 2)
-        return registers.d;
+            return registers.d;
         else if constexpr (p == 3)
-        return registers.e;
+            return registers.e;
         else if constexpr (p == 4)
-        return registers.h;
+            return registers.h;
         else if constexpr (p == 5)
-        return registers.l;
+            return registers.l;
         else if constexpr (p == 6)
-        return mmu.read(registers.hl);
+            return mmu.read(registers.hl);
         else if constexpr (p == 7)
-        return registers.a;
+            return registers.a;
     }
 
     template <u8 p>
@@ -236,6 +271,30 @@ private:
             return registers.de;
         else if constexpr (p == 2 || p == 3)
             return registers.hl;
+    }
+
+    void set_bit(Flag f, bool b) {
+        if (b)
+            registers.f |= static_cast<u8>(f);
+        else
+            registers.f &= ~static_cast<u8>(f);
+    }
+
+    static inline bool is_result_zero(u8 b) {
+        return b == 0;
+    }
+
+    template<typename T = u8, typename S = u8>
+    static inline bool is_carry_from_bit(u8 bit, T op1, S op2) {
+        // bit: rightmost bit, counting to the left side and starting at 1
+        bool mask = (1 << (bit - 1)) - 1;
+        return ((op1 & mask) + (op2 & mask)) > mask;
+    }
+
+    static inline bool is_no_borrow_from_bit(u16 bit, u8 op1, u8 op2) {
+        // bit: rightmost bit, counting to the left side and starting at 1
+        bool mask = static_cast<u8>((1 << bit) - 1);
+        return (op1 & mask) < (op2 & mask);
     }
 
     u8 read_u8() {

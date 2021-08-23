@@ -4,7 +4,7 @@
 
 class Cartrigde {
 private:
-    const std::vector<u8> rom;
+    std::vector<u8> rom;
 
 public:
     explicit Cartrigde(const std::string& filepath) : rom(load_file(filepath)) {
@@ -30,6 +30,12 @@ public:
             throw std::runtime_error(filepath + ": " + std::strerror(errno));
 
         return buffer;
+    }
+
+    u8 read(u16 address) const { return rom[address]; }
+
+    void write(u16 address, u8 value) {
+        rom[address] = value;
     }
 
     std::string title() const {

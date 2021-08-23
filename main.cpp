@@ -8,8 +8,8 @@
 int main() {
 //    Cartrigde cart("../../gbemu/roms/Tetris (World) (Rev A).gb");
     Cartrigde cart("../../gbemu/roms/cpu_instrs/individual/09-op r,r.gb");
-    CPU cpu{};
-    MMU mmu;
+    MMU mmu(cart);
+    CPU cpu(mmu);
     bool done = false;
     size_t cycles;
 
@@ -19,9 +19,9 @@ int main() {
             cycles += cpu.step();
 
             // blarggs test - serial output
-            if (mmu.read((u8) 0xff02) == 0x81) {
-                std::cout << mmu.read((u8) 0xff01);
-                mmu.write((u8) 0xff02, 0);
+            if (mmu.read(0xff02) == 0x81) {
+                std::cout << mmu.read(0xff01);
+                mmu.write(0xff02, 0);
             }
         }
 

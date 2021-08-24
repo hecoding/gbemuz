@@ -69,6 +69,7 @@ private:
     Registers registers{0xb0, 0x01, 0x13, 0, 0xd8, 0, 0x4D, 0x01, 0xfffe, 0x100};
     MMU& mmu;
     bool halted = false;
+    bool interrupt_enabled = true;
 
     size_t exec() {
         u8 op = read_u8();
@@ -92,28 +93,33 @@ private:
             case 0x14: inc_r<2>(); break;
             case 0x15: dec_r<2>(); break;
             case 0x16: ld_r_n<2>(); break;
+            case 0x18: jr_n(); break;
             case 0x1a: ldid_nn_a<1>(); break;
             case 0x1b: dec_rr<1>(); break;
             case 0x1c: inc_r<3>(); break;
             case 0x1d: dec_r<3>(); break;
             case 0x1e: ld_r_n<3>(); break;
+            case 0x20: jr_cc_n<0>(); break;
             case 0x21: ld_rp_nn<2>(); break;
             case 0x22: ldid_a_nn<2>(); break;
             case 0x23: inc_rr<2>(); break;
             case 0x24: inc_r<4>(); break;
             case 0x25: dec_r<4>(); break;
             case 0x26: ld_r_n<4>(); break;
+            case 0x28: jr_cc_n<1>(); break;
             case 0x2a: ldid_nn_a<2>(); break;
             case 0x2b: dec_rr<2>(); break;
             case 0x2c: inc_r<5>(); break;
             case 0x2d: dec_r<5>(); break;
             case 0x2e: ld_r_n<5>(); break;
+            case 0x30: jr_cc_n<2>(); break;
             case 0x31: ld_rp_nn<3>(); break;
             case 0x32: ldid_a_nn<3>(); break;
             case 0x33: inc_rr<3>(); break;
             case 0x34: inc_r<6>(); break;
             case 0x35: dec_r<6>(); break;
             case 0x36: ld_r_n<6>(); break;
+            case 0x38: jr_cc_n<3>(); break;
             case 0x3a: ldid_nn_a<3>(); break;
             case 0x3b: dec_rr<3>(); break;
             case 0x3c: inc_r<7>(); break;
@@ -141,28 +147,135 @@ private:
             case 0x79: ld_r1_r2<7, 1>(); break; case 0x7a: ld_r1_r2<7, 2>(); break; case 0x7b: ld_r1_r2<7, 3>(); break;
             case 0x7c: ld_r1_r2<7, 4>(); break; case 0x7d: ld_r1_r2<7, 5>(); break; case 0x7e: ld_r1_r2<7, 6>(); break;
             case 0x7f: ld_r1_r2<7, 7>(); break;
-            case 0xc3: registers.pc = read_u16(); break;
+            case 0xc3: jp_nn(); break;
+            case 0xc4: call_cc_nn<0>(); break;
+            case 0xcc: call_cc_nn<1>(); break;
+            case 0xcd: call_nn(); break;
+            case 0xd4: call_cc_nn<2>(); break;
+            case 0xdc: call_cc_nn<3>(); break;
+            case 0xe2: ld_c_a(); break;
+            case 0xe0: ldh_n_a(); break;
+            case 0xea: ld_nn_a(); break;
+            case 0xf0: ldh_a_n(); break;
+            case 0xfa: ld_a_nn(); break;
+            case 0xf2: ld_a_c(); break;
+            case 0xf3: di(); break;
+            case 0xfb: ei(); break;
+            default:
+                std::cout << "unimplemented " << op;
         }
 
         return cycles(op);
+    }
+
+    void push(u16 n) {
+        mmu.write(registers.sp - 1, (n & 0xFF00) >> 8);
+        mmu.write(registers.sp - 2, n & 0x00FF);
+        registers.sp -= 2;
+    }
+
+    u16 pop() {
+        u16 n = (mmu.read(registers.sp + 1) << 8) | mmu.read(registers.sp);
+        registers.sp += 2;
+        return n;
+    }
+
+    void call_nn() {
+        u16 nn = read_u16(); // get pc updated before saving it
+        push(registers.pc);
+        registers.pc = nn;
+    }
+
+    template<u8 c>
+    void call_cc_nn() {
+        u16 nn = read_u16();
+
+        if (condition_checks<c>()) {
+            push(registers.pc);
+            registers.pc = nn;
+        }
+    }
+
+    void ldh_n_a() {
+        mmu.write(0xff00 + read_u8(), registers.a);
+    }
+
+    void ldh_a_n() {
+        registers.a = mmu.read(0xff00 + read_u8());
+    }
+
+    void ld_a_c() {
+        registers.a = mmu.read(0xff00 + registers.c);
+    }
+
+    void ld_c_a() {
+        mmu.write(0xff00 + registers.c, registers.a);
+    }
+
+    void ld_nn_a() {
+        mmu.write(read_u16(), registers.a);
+    }
+
+    void ld_a_nn() {
+        registers.a = mmu.read(read_u16());
+    }
+
+    void di() {
+        interrupt_enabled = false;
+    }
+
+    void ei() {
+        interrupt_enabled = true;
+    }
+
+    void jp_nn() {
+        registers.pc = read_u16();
+    }
+
+    void jr_n() {
+        registers.pc += read_s8();
+    }
+
+    template<u8 c>
+    void jr_cc_n() {
+        s8 n = read_s8();
+
+        if (condition_checks<c>())
+            registers.pc += n;
+    }
+
+    template<u8 c>
+    bool condition_checks() {
+        if constexpr (c == 0)
+            return !read_flag(Flag::Zero);
+        else if constexpr (c == 1)
+            return read_flag(Flag::Zero);
+        else if constexpr (c == 2)
+            return !read_flag(Flag::Carry);
+        else if constexpr (c == 3)
+            return read_flag(Flag::Carry);
+    }
+
+    inline bool read_flag(Flag f) const {
+        return registers.f & static_cast<u8>(f);
     }
 
     template <u8 r>
     void inc_r() {
         r_set<r>(r_get<r>() + 1);
 
-        set_bit(Flag::Zero, CPU::is_result_zero(r_get<r>()));
-        set_bit(Flag::Negative, false);
-        set_bit(Flag::HalfCarry, CPU::is_carry_from_bit(3, r_get<r>(), 1));
+        set_flag(Flag::Zero, CPU::is_result_zero(r_get<r>()));
+        set_flag(Flag::Negative, false);
+        set_flag(Flag::HalfCarry, CPU::is_carry_from_bit(3, r_get<r>()));
     }
 
     template <u8 r>
     void dec_r() {
         r_set<r>(r_get<r>() - 1);
 
-        set_bit(Flag::Zero, CPU::is_result_zero(r_get<r>()));
-        set_bit(Flag::Negative, true);
-        set_bit(Flag::HalfCarry, CPU::is_no_borrow_from_bit(4, r_get<r>(), 1));
+        set_flag(Flag::Zero, CPU::is_result_zero(r_get<r>()));
+        set_flag(Flag::Negative, true);
+        set_flag(Flag::HalfCarry, CPU::is_no_borrow_from_bit(4, r_get<r>()));
     }
 
     template <u8 r>
@@ -273,7 +386,7 @@ private:
             return registers.hl;
     }
 
-    void set_bit(Flag f, bool b) {
+    void set_flag(Flag f, bool b) {
         if (b)
             registers.f |= static_cast<u8>(f);
         else
@@ -285,13 +398,13 @@ private:
     }
 
     template<typename T = u8, typename S = u8>
-    static inline bool is_carry_from_bit(u8 bit, T op1, S op2) {
+    static inline bool is_carry_from_bit(u8 bit, T op1, S op2 = 1) {
         // bit: rightmost bit, counting to the left side and starting at 1
         u8 mask = (1 << (bit - 1)) - 1;
         return ((op1 & mask) + (op2 & mask)) > mask;
     }
 
-    static inline bool is_no_borrow_from_bit(u16 bit, u8 op1, u8 op2) {
+    static inline bool is_no_borrow_from_bit(u16 bit, u8 op1, u8 op2 = 1) {
         // bit: rightmost bit, counting to the left side and starting at 1
         u8 mask = static_cast<u8>((1 << bit) - 1);
         return (op1 & mask) < (op2 & mask);
@@ -301,6 +414,11 @@ private:
         auto op = mmu.read(registers.pc);
         registers.pc++;
         return op;
+    }
+
+    s8 read_s8() {
+        auto n = read_u8();
+        return static_cast<s8>(n);
     }
 
     u16 read_u16() {

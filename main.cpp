@@ -7,7 +7,7 @@
 
 int main() {
 //    Cartrigde cart("../../gbemu/roms/Tetris (World) (Rev A).gb");
-    Cartrigde cart("../../gbemu/roms/cpu_instrs/individual/09-op r,r.gb");
+    Cartrigde cart("../../gbemu/roms/cpu_instrs/individual/06-ld r,r.gb");
     MMU mmu(cart);
     CPU cpu(mmu);
     bool done = false;

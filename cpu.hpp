@@ -287,13 +287,13 @@ private:
     template<typename T = u8, typename S = u8>
     static inline bool is_carry_from_bit(u8 bit, T op1, S op2) {
         // bit: rightmost bit, counting to the left side and starting at 1
-        bool mask = (1 << (bit - 1)) - 1;
+        u8 mask = (1 << (bit - 1)) - 1;
         return ((op1 & mask) + (op2 & mask)) > mask;
     }
 
     static inline bool is_no_borrow_from_bit(u16 bit, u8 op1, u8 op2) {
         // bit: rightmost bit, counting to the left side and starting at 1
-        bool mask = static_cast<u8>((1 << bit) - 1);
+        u8 mask = static_cast<u8>((1 << bit) - 1);
         return (op1 & mask) < (op2 & mask);
     }
 

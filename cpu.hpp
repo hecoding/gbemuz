@@ -147,39 +147,157 @@ private:
             case 0x79: ld_r1_r2<7, 1>(); break; case 0x7a: ld_r1_r2<7, 2>(); break; case 0x7b: ld_r1_r2<7, 3>(); break;
             case 0x7c: ld_r1_r2<7, 4>(); break; case 0x7d: ld_r1_r2<7, 5>(); break; case 0x7e: ld_r1_r2<7, 6>(); break;
             case 0x7f: ld_r1_r2<7, 7>(); break;
+            case 0x80: add<0>(); break; case 0x81: add<1>(); break; case 0x82: add<2>(); break;
+            case 0x83: add<3>(); break; case 0x84: add<4>(); break; case 0x85: add<5>(); break;
+            case 0x86: add<6>(); break; case 0x87: add<7>(); break; case 0x88: adc<0>(); break;
+            case 0x89: adc<1>(); break; case 0x8a: adc<2>(); break; case 0x8b: adc<3>(); break;
+            case 0x8c: adc<4>(); break; case 0x8d: adc<5>(); break; case 0x8e: adc<6>(); break;
+            case 0x8f: adc<7>(); break; case 0x90: sub<0>(); break; case 0x91: sub<1>(); break;
+            case 0x92: sub<2>(); break; case 0x93: sub<3>(); break; case 0x94: sub<4>(); break;
+            case 0x95: sub<5>(); break; case 0x96: sub<6>(); break; case 0x97: sub<7>(); break;
+            case 0x98: sbc<0>(); break; case 0x99: sbc<1>(); break; case 0x9a: sbc<2>(); break;
+            case 0x9b: sbc<3>(); break; case 0x9c: sbc<4>(); break; case 0x9d: sbc<5>(); break;
+            case 0x9e: sbc<6>(); break; case 0x9f: sbc<7>(); break; case 0xa0: and_<0>(); break;
+            case 0xa1: and_<1>(); break; case 0xa2: and_<2>(); break; case 0xa3: and_<3>(); break;
+            case 0xa4: and_<4>(); break; case 0xa5: and_<5>(); break; case 0xa6: and_<6>(); break;
+            case 0xa7: and_<7>(); break; case 0xa8: xor_<0>(); break; case 0xa9: xor_<1>(); break;
+            case 0xaa: xor_<2>(); break; case 0xab: xor_<3>(); break; case 0xac: xor_<4>(); break;
+            case 0xad: xor_<5>(); break; case 0xae: xor_<6>(); break; case 0xaf: xor_<7>(); break;
+            case 0xb0: or_<0>(); break; case 0xb1: or_<1>(); break; case 0xb2: or_<2>(); break;
+            case 0xb3: or_<3>(); break; case 0xb4: or_<4>(); break; case 0xb5: or_<5>(); break;
+            case 0xb6: or_<6>(); break; case 0xb7: or_<7>(); break; case 0xb8: cp<0>(); break;
+            case 0xb9: cp<1>(); break; case 0xba: cp<2>(); break; case 0xbb: cp<3>(); break;
+            case 0xbc: cp<4>(); break; case 0xbd: cp<5>(); break; case 0xbe: cp<6>(); break; case 0xbf: cp<7>(); break;
             case 0xc0: ret_cc<0>(); break;
             case 0xc1: pop_nn<0>(); break;
             case 0xc3: jp_nn(); break;
             case 0xc4: call_cc_nn<0>(); break;
             case 0xc5: push_nn<0>(); break;
+            case 0xc6: add<8>(); break;
             case 0xc8: ret_cc<1>(); break;
             case 0xc9: ret(); break;
             case 0xcc: call_cc_nn<1>(); break;
             case 0xcd: call_nn(); break;
+            case 0xce: adc<8>(); break;
             case 0xd0: ret_cc<2>(); break;
             case 0xd1: pop_nn<1>(); break;
             case 0xd4: call_cc_nn<2>(); break;
             case 0xd5: push_nn<1>(); break;
+            case 0xd6: sub<8>(); break;
             case 0xd8: ret_cc<3>(); break;
             case 0xd9: reti(); break;
             case 0xdc: call_cc_nn<3>(); break;
+            case 0xde: sbc<8>(); break;
             case 0xe2: ld_c_a(); break;
             case 0xe0: ldh_n_a(); break;
             case 0xe1: pop_nn<2>(); break;
             case 0xe5: push_nn<2>(); break;
+            case 0xe6: and_<8>(); break;
             case 0xea: ld_nn_a(); break;
+            case 0xee: xor_<8>(); break;
             case 0xf0: ldh_a_n(); break;
             case 0xf1: pop_nn<3>(); break;
+            case 0xf6: or_<8>(); break;
             case 0xfa: ld_a_nn(); break;
             case 0xf2: ld_a_c(); break;
             case 0xf3: di(); break;
             case 0xf5: push_nn<3>(); break;
             case 0xfb: ei(); break;
+            case 0xfe: cp<8>(); break;
             default:
                 std::cout << "unimplemented " << op;
         }
 
         return cycles(op);
+    }
+
+    // alu
+    template<u8 r>
+    void add() {
+        u16 x = registers.a + r_get<r>();
+        u8 result = static_cast<u8>(x);
+
+        set_flag(Flag::Zero, CPU::is_result_zero(result));
+        set_flag(Flag::Negative, false);
+        set_flag(Flag::HalfCarry, CPU::is_carry_from_bit(3, registers.a, r_get<r>()));
+        set_flag(Flag::Carry, CPU::is_carry_from_bit(7, registers.a, r_get<r>()));
+
+        registers.a = result;
+    }
+
+    template<u8 r>
+    void adc() {
+        u16 x = registers.a + r_get<r>() + read_flag(Flag::Carry);
+        u8 result = static_cast<u8>(x);
+
+        set_flag(Flag::Zero, CPU::is_result_zero(result));
+        set_flag(Flag::Negative, false);
+        set_flag(Flag::HalfCarry, CPU::is_carry_from_bit(3, registers.a, r_get<r>()));
+        set_flag(Flag::Carry, CPU::is_carry_from_bit(7, registers.a, r_get<r>()));
+
+        registers.a = result;
+    }
+
+    template<u8 r>
+    void sub() {
+        u8 result = registers.a - r_get<r>();
+
+        set_flag(Flag::Zero, CPU::is_result_zero(result));
+        set_flag(Flag::Negative, true);
+        set_flag(Flag::HalfCarry, CPU::is_no_borrow_from_bit(4, registers.a, r_get<r>()));
+        set_flag(Flag::Carry, CPU::is_no_borrow_from_bit(8, registers.a, r_get<r>()));
+
+        registers.a = result;
+    }
+
+    template<u8 r>
+    void sbc() {
+        u8 result = registers.a - r_get<r>() - read_flag(Flag::Carry);
+
+        set_flag(Flag::Zero, CPU::is_result_zero(result));
+        set_flag(Flag::Negative, true);
+        set_flag(Flag::HalfCarry, CPU::is_no_borrow_from_bit(4, registers.a, r_get<r>()));
+        set_flag(Flag::Carry, CPU::is_no_borrow_from_bit(1, registers.a, r_get<r>()));
+
+        registers.a = result;
+    }
+
+    template<u8 r>
+    void and_() {
+        registers.a &= r_get<r>();
+
+        set_flag(Flag::Zero, CPU::is_result_zero(registers.a));
+        set_flag(Flag::Negative, false);
+        set_flag(Flag::HalfCarry, true);
+        set_flag(Flag::Carry, false);
+    }
+
+    template<u8 r>
+    void xor_() {
+        registers.a ^= r_get<r>();
+
+        set_flag(Flag::Zero, CPU::is_result_zero(registers.a));
+        set_flag(Flag::Negative, false);
+        set_flag(Flag::HalfCarry, false);
+        set_flag(Flag::Carry, false);
+    }
+
+    template<u8 r>
+    void or_() {
+        registers.a |= r_get<r>();
+
+        set_flag(Flag::Zero, CPU::is_result_zero(registers.a));
+        set_flag(Flag::Negative, false);
+        set_flag(Flag::HalfCarry, false);
+        set_flag(Flag::Carry, false);
+    }
+
+    template<u8 r>
+    void cp() {
+        set_flag(Flag::Zero, registers.a == r_get<r>());
+        set_flag(Flag::Negative, true);
+        set_flag(Flag::HalfCarry, CPU::is_no_borrow_from_bit(4, registers.a, r_get<r>()));
+        set_flag(Flag::Carry, CPU::is_no_borrow_from_bit(8, registers.a, r_get<r>()));
     }
 
     template<u8 p>
@@ -381,6 +499,8 @@ private:
             return mmu.read(registers.hl);
         else if constexpr (p == 7)
             return registers.a;
+        else if constexpr (p == 8)
+            return read_u8();
     }
 
     template <u8 p>

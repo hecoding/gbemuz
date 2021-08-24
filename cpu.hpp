@@ -147,25 +147,64 @@ private:
             case 0x79: ld_r1_r2<7, 1>(); break; case 0x7a: ld_r1_r2<7, 2>(); break; case 0x7b: ld_r1_r2<7, 3>(); break;
             case 0x7c: ld_r1_r2<7, 4>(); break; case 0x7d: ld_r1_r2<7, 5>(); break; case 0x7e: ld_r1_r2<7, 6>(); break;
             case 0x7f: ld_r1_r2<7, 7>(); break;
+            case 0xc0: ret_cc<0>(); break;
+            case 0xc1: pop_nn<0>(); break;
             case 0xc3: jp_nn(); break;
             case 0xc4: call_cc_nn<0>(); break;
+            case 0xc5: push_nn<0>(); break;
+            case 0xc8: ret_cc<1>(); break;
+            case 0xc9: ret(); break;
             case 0xcc: call_cc_nn<1>(); break;
             case 0xcd: call_nn(); break;
+            case 0xd0: ret_cc<2>(); break;
+            case 0xd1: pop_nn<1>(); break;
             case 0xd4: call_cc_nn<2>(); break;
+            case 0xd5: push_nn<1>(); break;
+            case 0xd8: ret_cc<3>(); break;
+            case 0xd9: reti(); break;
             case 0xdc: call_cc_nn<3>(); break;
             case 0xe2: ld_c_a(); break;
             case 0xe0: ldh_n_a(); break;
+            case 0xe1: pop_nn<2>(); break;
+            case 0xe5: push_nn<2>(); break;
             case 0xea: ld_nn_a(); break;
             case 0xf0: ldh_a_n(); break;
+            case 0xf1: pop_nn<3>(); break;
             case 0xfa: ld_a_nn(); break;
             case 0xf2: ld_a_c(); break;
             case 0xf3: di(); break;
+            case 0xf5: push_nn<3>(); break;
             case 0xfb: ei(); break;
             default:
                 std::cout << "unimplemented " << op;
         }
 
         return cycles(op);
+    }
+
+    template<u8 p>
+    void push_nn() {
+        push(rp2<p>());
+    }
+
+    template<u8 p>
+    void pop_nn() {
+        rp2<p>() = pop();
+    }
+
+    void ret() {
+        registers.pc = pop();
+    }
+
+    template<u8 c>
+    void ret_cc() {
+        if (condition_checks<c>())
+            registers.pc = pop();
+    }
+
+    void reti() {
+        registers.pc = pop();
+        interrupt_enabled = true;
     }
 
     void push(u16 n) {
@@ -374,6 +413,18 @@ private:
             return registers.hl;
         else if constexpr (p == 3)
             return registers.sp;
+    }
+
+    template <u8 p>
+    auto& rp2() {
+        if constexpr (p == 0)
+            return registers.bc;
+        else if constexpr (p == 1)
+            return registers.de;
+        else if constexpr (p == 2)
+            return registers.hl;
+        else if constexpr (p == 3)
+            return registers.af;
     }
 
     template <u8 p>

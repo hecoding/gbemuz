@@ -105,7 +105,6 @@ private:
     size_t exec() {
         u8 op = read_u8();
 //        print_debug(op);
-        // todo alu adc etc carries are wrong
 
         if (op == 0xcb)
             exec_prefixed(read_u8());
@@ -378,13 +377,14 @@ private:
     template<u8 r>
     void adc() {
         u8 n = r_get<r>();
-        u16 x = registers.a + n + read_flag(Flag::Carry);
+        bool carry = read_flag(Flag::Carry);
+        u16 x = registers.a + n + carry;
         u8 result = static_cast<u8>(x);
 
         set_flag(Flag::Zero, CPU::is_result_zero(result));
         set_flag(Flag::Negative, false);
-        set_flag(Flag::HalfCarry, CPU::is_carry_from_bit(3, registers.a, n));
-        set_flag(Flag::Carry, CPU::is_carry_from_bit(7, registers.a, n));
+        set_flag(Flag::HalfCarry, CPU::is_carry_from_bit(3, registers.a, n, carry));
+        set_flag(Flag::Carry, CPU::is_carry_from_bit(7, registers.a, n, carry));
 
         registers.a = result;
     }
@@ -405,12 +405,13 @@ private:
     template<u8 r>
     void sbc() {
         u8 n = r_get<r>();
-        u8 result = registers.a - n - read_flag(Flag::Carry);
+        bool carry = read_flag(Flag::Carry);
+        u8 result = registers.a - n - carry;
 
         set_flag(Flag::Zero, CPU::is_result_zero(result));
         set_flag(Flag::Negative, true);
-        set_flag(Flag::HalfCarry, CPU::is_no_borrow_from_bit(4, registers.a, n));
-        set_flag(Flag::Carry, CPU::is_no_borrow_from_bit(1, registers.a, n));
+        set_flag(Flag::HalfCarry, CPU::is_no_borrow_from_bit(4, registers.a, n, carry));
+        set_flag(Flag::Carry, CPU::is_no_borrow_from_bit(8, registers.a, n, carry));
 
         registers.a = result;
     }
@@ -727,16 +728,16 @@ private:
     }
 
     template<typename T = u8, typename S = u8>
-    static inline bool is_carry_from_bit(u8 bit, T op1, S op2) {
+    static inline bool is_carry_from_bit(u8 bit, T op1, S op2, bool carry = false) {
         // bit: counting right to left and starting at 0
         S mask = (1 << (bit + 1)) - 1;
-        return ((op1 & mask) + (op2 & mask)) > mask;
+        return ((op1 & mask) + (op2 & mask) + carry) > mask;
     }
 
-    static inline bool is_no_borrow_from_bit(u16 bit, u8 op1, u8 op2 = 1) {
+    static inline bool is_no_borrow_from_bit(u16 bit, u8 op1, u8 op2 = 1, bool carry = false) {
         // bit: counting right to left and starting at 0
         u8 mask = static_cast<u8>((1 << bit) - 1);
-        return (op1 & mask) < (op2 & mask);
+        return ((op1 & mask) - (op2 & mask) - carry) < 0;
     }
 
     u8 read_u8() {

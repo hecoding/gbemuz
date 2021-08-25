@@ -7,7 +7,7 @@
 
 int main() {
 //    Cartrigde cart("../../gbemu/roms/Tetris (World) (Rev A).gb");
-//    Cartrigde cart("../../gbemu/roms/cpu_instrs/individual/01-special.gb");
+//    Cartrigde cart("../../gbemu/roms/cpu_instrs/individual/01-special.gb"); // pass (weird loop printing)
 //    Cartrigde cart("../../gbemu/roms/cpu_instrs/individual/02-interrupts.gb");
 //    Cartrigde cart("../../gbemu/roms/cpu_instrs/individual/03-op sp,hl.gb"); // pass
 //    Cartrigde cart("../../gbemu/roms/cpu_instrs/individual/04-op r,imm.gb"); // pass

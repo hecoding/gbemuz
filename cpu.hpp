@@ -147,28 +147,29 @@ private:
             case 0x1d: dec_r<3>(); break;
             case 0x1e: ld_r_n<3>(); break;
             case 0x1f: rot<3, 7>(); break;
-            case 0x20: jr_cc_n<0>(); break;
+            case 0x20: j_cc_n<0, true>(); break;
             case 0x21: ld_rp_nn<2>(); break;
             case 0x22: ldid_a_nn<2>(); break;
             case 0x23: inc_rr<2>(); break;
             case 0x24: inc_r<4>(); break;
             case 0x25: dec_r<4>(); break;
             case 0x26: ld_r_n<4>(); break;
-            case 0x28: jr_cc_n<1>(); break;
+            case 0x27: daa(); break;
+            case 0x28: j_cc_n<1, true>(); break;
             case 0x29: add_hl_n<2>(); break;
             case 0x2a: ldid_nn_a<2>(); break;
             case 0x2b: dec_rr<2>(); break;
             case 0x2c: inc_r<5>(); break;
             case 0x2d: dec_r<5>(); break;
             case 0x2e: ld_r_n<5>(); break;
-            case 0x30: jr_cc_n<2>(); break;
+            case 0x30: j_cc_n<2, true>(); break;
             case 0x31: ld_rp_nn<3>(); break;
             case 0x32: ldid_a_nn<3>(); break;
             case 0x33: inc_rr<3>(); break;
             case 0x34: inc_r<6>(); break;
             case 0x35: dec_r<6>(); break;
             case 0x36: ld_r_n<6>(); break;
-            case 0x38: jr_cc_n<3>(); break;
+            case 0x38: j_cc_n<3, true>(); break;
             case 0x39: add_hl_n<3>(); break;
             case 0x3a: ldid_nn_a<3>(); break;
             case 0x3b: dec_rr<3>(); break;
@@ -220,22 +221,26 @@ private:
             case 0xbc: cp<4>(); break; case 0xbd: cp<5>(); break; case 0xbe: cp<6>(); break; case 0xbf: cp<7>(); break;
             case 0xc0: ret_cc<0>(); break;
             case 0xc1: pop_nn<0>(); break;
+            case 0xc2: j_cc_n<0>(); break;
             case 0xc3: jp_nn(); break;
             case 0xc4: call_cc_nn<0>(); break;
             case 0xc5: push_nn<0>(); break;
             case 0xc6: add<8>(); break;
             case 0xc8: ret_cc<1>(); break;
             case 0xc9: ret(); break;
+            case 0xca: j_cc_n<1>(); break;
             case 0xcc: call_cc_nn<1>(); break;
             case 0xcd: call_nn(); break;
             case 0xce: adc<8>(); break;
             case 0xd0: ret_cc<2>(); break;
             case 0xd1: pop_nn<1>(); break;
+            case 0xd2: j_cc_n<2>(); break;
             case 0xd4: call_cc_nn<2>(); break;
             case 0xd5: push_nn<1>(); break;
             case 0xd6: sub<8>(); break;
             case 0xd8: ret_cc<3>(); break;
             case 0xd9: reti(); break;
+            case 0xda: j_cc_n<3>(); break;
             case 0xdc: call_cc_nn<3>(); break;
             case 0xde: sbc<8>(); break;
             case 0xe2: ld_c_a(); break;
@@ -290,6 +295,28 @@ private:
             default:
                 std::cout << "unimplemented " << op;
         }
+    }
+
+    void daa() {
+        u8 reg = registers.a;
+        u16 correction = read_flag(Flag::Carry) ? 0x60 : 0x00;
+
+        if (read_flag(Flag::HalfCarry) || (!read_flag(Flag::Negative) && ((reg & 0x0F) > 9)))
+            correction |= 0x06;
+
+        if (read_flag(Flag::Carry) || (!read_flag(Flag::Negative) && (reg > 0x99)))
+            correction |= 0x60;
+
+        if (read_flag(Flag::Negative))
+            reg = static_cast<u8>(reg - correction);
+        else
+            reg = static_cast<u8>(reg + correction);
+
+        set_flag(Flag::Zero, reg == 0);
+        set_flag(Flag::HalfCarry, false);
+        set_flag(Flag::Carry, ((correction << 2) & 0x100) != 0);
+
+        registers.a = static_cast<u8>(reg);
     }
 
     void ld_hl_sp_n() {
@@ -573,9 +600,13 @@ private:
         registers.pc += read_s8();
     }
 
-    template<u8 c>
-    void jr_cc_n() {
-        s8 n = read_s8();
+    template<u8 c, bool relative = false>
+    void j_cc_n() {
+        std::conditional_t<relative, s8, u8> n;
+        if constexpr(relative)
+            n = read_s8();
+        else
+            n = read_u8();
 
         if (condition_checks<c>())
             registers.pc += n;

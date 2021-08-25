@@ -163,6 +163,7 @@ private:
             case 0x2c: inc_r<5>(); break;
             case 0x2d: dec_r<5>(); break;
             case 0x2e: ld_r_n<5>(); break;
+            case 0x2f: cpl(); break;
             case 0x30: j_cc_n<2, true>(); break;
             case 0x31: ld_rp_nn<3>(); break;
             case 0x32: ldid_a_nn<3>(); break;
@@ -170,6 +171,7 @@ private:
             case 0x34: inc_r<6>(); break;
             case 0x35: dec_r<6>(); break;
             case 0x36: ld_r_n<6>(); break;
+            case 0x37: scf(); break;
             case 0x38: j_cc_n<3, true>(); break;
             case 0x39: add_hl_n<3>(); break;
             case 0x3a: ldid_nn_a<3>(); break;
@@ -177,6 +179,7 @@ private:
             case 0x3c: inc_r<7>(); break;
             case 0x3d: dec_r<7>(); break;
             case 0x3e: ld_r_n<7>(); break;
+            case 0x3f: ccf(); break;
             case 0x40: ld_r1_r2<0, 0>(); break; case 0x41: ld_r1_r2<0, 1>(); break; case 0x42: ld_r1_r2<0, 2>(); break;
             case 0x43: ld_r1_r2<0, 3>(); break; case 0x44: ld_r1_r2<0, 4>(); break; case 0x45: ld_r1_r2<0, 5>(); break;
             case 0x46: ld_r1_r2<0, 6>(); break; case 0x47: ld_r1_r2<0, 7>(); break; case 0x48: ld_r1_r2<1, 0>(); break;
@@ -304,6 +307,24 @@ private:
             default:
                 std::cout << "unimplemented " << op;
         }
+    }
+
+    void cpl() {
+        registers.a = ~registers.a;
+        set_flag(Flag::Negative, true);
+        set_flag(Flag::HalfCarry, true);
+    }
+
+    void scf() {
+        set_flag(Flag::Negative, false);
+        set_flag(Flag::HalfCarry, false);
+        set_flag(Flag::Carry, true);
+    }
+
+    void ccf() {
+        set_flag(Flag::Negative, false);
+        set_flag(Flag::HalfCarry, false);
+        set_flag(Flag::Carry, !read_flag(Flag::Carry));
     }
 
     void stop() {

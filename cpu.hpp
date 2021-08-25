@@ -93,6 +93,8 @@ private:
         << " H: " << read_flag(Flag::HalfCarry)
         << " C: " << read_flag(Flag::Carry) << std::endl;
         std::cout << "Next instruction to execute: " << (uint) op;
+        if (op == 0xcb)
+            std::cout << " " << (uint) mmu.read(registers.pc);
         std::cout << std::endl;
         std::cout << std::endl;
         std::cout << "All interrupts Enabled: " << std::boolalpha << interrupt_enabled << std::endl;
@@ -102,14 +104,18 @@ private:
 
     size_t exec() {
         u8 op = read_u8();
-        print_debug(op);
+//        print_debug(op);
         // todo alu adc etc carries are wrong
 
-//        if (registers.pc -1 == 0xc0c3) // enters call for printing op
-//            std::cout << "pause" << std::endl;
-//        if (registers.pc -1 == 0xc06a) // unimplemented?
-//            std::cout << "pause" << std::endl;
+        if (op == 0xcb)
+            exec_prefixed(read_u8());
+        else
+            exec_regular(op);
 
+        return cycles(op);
+    }
+
+    void exec_regular(u8 op) {
         switch (op) {
             case 0x00: break;
             case 0x01: ld_rp_nn<0>(); break;
@@ -118,23 +124,29 @@ private:
             case 0x04: inc_r<0>(); break;
             case 0x05: dec_r<0>(); break;
             case 0x06: ld_r_n<0>(); break;
+            case 0x07: rot<0, 7>(); break;
+            case 0x09: add_hl_n<0>(); break;
             case 0x0a: ldid_nn_a<0>(); break;
             case 0x0b: dec_rr<0>(); break;
             case 0x0c: inc_r<1>(); break;
             case 0x0d: dec_r<1>(); break;
             case 0x0e: ld_r_n<1>(); break;
+            case 0x0f: rot<1, 7>(); break;
             case 0x11: ld_rp_nn<1>(); break;
             case 0x12: ldid_a_nn<1>(); break;
             case 0x13: inc_rr<1>(); break;
             case 0x14: inc_r<2>(); break;
             case 0x15: dec_r<2>(); break;
             case 0x16: ld_r_n<2>(); break;
+            case 0x17: rot<2, 7>(); break;
             case 0x18: jr_n(); break;
+            case 0x19: add_hl_n<1>(); break;
             case 0x1a: ldid_nn_a<1>(); break;
             case 0x1b: dec_rr<1>(); break;
             case 0x1c: inc_r<3>(); break;
             case 0x1d: dec_r<3>(); break;
             case 0x1e: ld_r_n<3>(); break;
+            case 0x1f: rot<3, 7>(); break;
             case 0x20: jr_cc_n<0>(); break;
             case 0x21: ld_rp_nn<2>(); break;
             case 0x22: ldid_a_nn<2>(); break;
@@ -143,6 +155,7 @@ private:
             case 0x25: dec_r<4>(); break;
             case 0x26: ld_r_n<4>(); break;
             case 0x28: jr_cc_n<1>(); break;
+            case 0x29: add_hl_n<2>(); break;
             case 0x2a: ldid_nn_a<2>(); break;
             case 0x2b: dec_rr<2>(); break;
             case 0x2c: inc_r<5>(); break;
@@ -156,6 +169,7 @@ private:
             case 0x35: dec_r<6>(); break;
             case 0x36: ld_r_n<6>(); break;
             case 0x38: jr_cc_n<3>(); break;
+            case 0x39: add_hl_n<3>(); break;
             case 0x3a: ldid_nn_a<3>(); break;
             case 0x3b: dec_rr<3>(); break;
             case 0x3c: inc_r<7>(); break;
@@ -229,6 +243,8 @@ private:
             case 0xe1: pop_nn<2>(); break;
             case 0xe5: push_nn<2>(); break;
             case 0xe6: and_<8>(); break;
+            case 0xe8: add_sp_n(); break;
+            case 0xe9: jp_hl(); break;
             case 0xea: ld_nn_a(); break;
             case 0xee: xor_<8>(); break;
             case 0xf0: ldh_a_n(); break;
@@ -243,8 +259,105 @@ private:
             default:
                 std::cout << "unimplemented " << op;
         }
+    }
 
-        return cycles(op);
+    void exec_prefixed(u8 op) {
+        switch (op) {
+            case 0x00: rot<0, 0>() ;break; case 0x01: rot<0, 1>() ;break; case 0x02: rot<0, 2>() ;break;
+            case 0x03: rot<0, 3>() ;break; case 0x04: rot<0, 4>() ;break; case 0x05: rot<0, 5>() ;break;
+            case 0x06: rot<0, 6>() ;break; case 0x07: rot<0, 7>() ;break; case 0x08: rot<1, 0>() ;break;
+            case 0x09: rot<1, 1>() ;break; case 0x0a: rot<1, 2>() ;break; case 0x0b: rot<1, 3>() ;break;
+            case 0x0c: rot<1, 4>() ;break; case 0x0d: rot<1, 5>() ;break; case 0x0e: rot<1, 6>() ;break;
+            case 0x0f: rot<1, 7>() ;break; case 0x10: rot<2, 0>() ;break; case 0x11: rot<2, 1>() ;break;
+            case 0x12: rot<2, 2>() ;break; case 0x13: rot<2, 3>() ;break; case 0x14: rot<2, 4>() ;break;
+            case 0x15: rot<2, 5>() ;break; case 0x16: rot<2, 6>() ;break; case 0x17: rot<2, 7>() ;break;
+            case 0x18: rot<3, 0>() ;break; case 0x19: rot<3, 1>() ;break; case 0x1a: rot<3, 2>() ;break;
+            case 0x1b: rot<3, 3>() ;break; case 0x1c: rot<3, 4>() ;break; case 0x1d: rot<3, 5>() ;break;
+            case 0x1e: rot<3, 6>() ;break; case 0x1f: rot<3, 7>() ;break; case 0x20: rot<4, 0>() ;break;
+            case 0x21: rot<4, 1>() ;break; case 0x22: rot<4, 2>() ;break; case 0x23: rot<4, 3>() ;break;
+            case 0x24: rot<4, 4>() ;break; case 0x25: rot<4, 5>() ;break; case 0x26: rot<4, 6>() ;break;
+            case 0x27: rot<4, 7>() ;break; case 0x28: rot<5, 0>() ;break; case 0x29: rot<5, 1>() ;break;
+            case 0x2a: rot<5, 2>() ;break; case 0x2b: rot<5, 3>() ;break; case 0x2c: rot<5, 4>() ;break;
+            case 0x2d: rot<5, 5>() ;break; case 0x2e: rot<5, 6>() ;break; case 0x2f: rot<5, 7>() ;break;
+            case 0x30: rot<6, 0>() ;break; case 0x31: rot<6, 1>() ;break; case 0x32: rot<6, 2>() ;break;
+            case 0x33: rot<6, 3>() ;break; case 0x34: rot<6, 4>() ;break; case 0x35: rot<6, 5>() ;break;
+            case 0x36: rot<6, 6>() ;break; case 0x37: rot<6, 7>() ;break; case 0x38: rot<7, 0>() ;break;
+            case 0x39: rot<7, 1>() ;break; case 0x3a: rot<7, 2>() ;break; case 0x3b: rot<7, 3>() ;break;
+            case 0x3c: rot<7, 4>() ;break; case 0x3d: rot<7, 5>() ;break; case 0x3e: rot<7, 6>() ;break;
+            case 0x3f: rot<7, 7>() ;break;
+            default:
+                std::cout << "unimplemented " << op;
+        }
+    }
+
+    void jp_hl() {
+        registers.pc = registers.hl;
+    }
+
+    template<u8 r>
+    void add_hl_n() {
+        u16 n = rp<r>();
+        u32 x = registers.hl + n;
+        rp<r>() = static_cast<u16>(x);
+
+        set_flag(Flag::Negative, false);
+        set_flag(Flag::HalfCarry, CPU::is_carry_from_bit(11, registers.hl, n));
+        set_flag(Flag::Carry, CPU::is_carry_from_bit(15, registers.hl, n));
+    }
+
+    void add_sp_n() {
+        s8 n = read_s8();
+
+        set_flag(Flag::Zero, false);
+        set_flag(Flag::Negative, false);
+        set_flag(Flag::HalfCarry, CPU::is_carry_from_bit(4, registers.sp, n));
+        set_flag(Flag::Carry, CPU::is_carry_from_bit(8, registers.sp, n));
+
+        registers.sp += n;
+    }
+
+    template<u8 op, u8 r>
+    void rot() {
+        u8 n = r_get<r>();
+        bool carry = false;
+        u8 result = 0;
+
+        if constexpr (op == 0) { // rlc
+            carry = read_bit(7, n);
+            result = (n << 1) | carry;
+        } else if constexpr (op == 1) { // rrc
+            carry = read_bit(0, n);
+            result = (n >> 1) | (0x80 * carry);
+        } else if constexpr (op == 2) { // rl
+            carry = read_bit(7, n);
+            result = (n << 1) | read_flag(Flag::Carry);
+        } else if constexpr (op == 3) { // rr
+            carry = read_bit(0, n);
+            result = (n >> 1) | (0x80 * read_flag(Flag::Carry));
+        } else if constexpr (op == 4) { // sla
+            carry = read_bit(7, n);
+            result = n << 1;
+        } else if constexpr (op == 5) { // sra
+            carry = read_bit(0, n);
+            result = (n >> 1) | (0x80 & n);
+        } else if constexpr (op == 6) { // swap
+            carry = false;
+            result = (n << 4) | (n >> 4);
+        } else if constexpr (op == 7) { // srl
+            carry = read_bit(0, n);
+            result = n >> 1;
+        }
+
+        set_flag(Flag::Zero, CPU::is_result_zero(result));
+        set_flag(Flag::Negative, false);
+        set_flag(Flag::HalfCarry, false);
+        set_flag(Flag::Carry, carry);
+
+        r_set<r>(result);
+    }
+
+    static inline bool read_bit(u8 bit, u8 value) {
+        return (value & (1 << bit)) != 0;
     }
 
     // alu
@@ -616,7 +729,7 @@ private:
     template<typename T = u8, typename S = u8>
     static inline bool is_carry_from_bit(u8 bit, T op1, S op2) {
         // bit: counting right to left and starting at 0
-        u8 mask = (1 << (bit + 1)) - 1;
+        S mask = (1 << (bit + 1)) - 1;
         return ((op1 & mask) + (op2 & mask)) > mask;
     }
 

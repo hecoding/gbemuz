@@ -132,6 +132,7 @@ private:
             case 0x0d: dec_r<1>(); break;
             case 0x0e: ld_r_n<1>(); break;
             case 0x0f: rot<1, 7>(); break;
+            case 0x10: stop(); break;
             case 0x11: ld_rp_nn<1>(); break;
             case 0x12: ldid_a_nn<1>(); break;
             case 0x13: inc_rr<1>(); break;
@@ -226,35 +227,42 @@ private:
             case 0xc4: call_cc_nn<0>(); break;
             case 0xc5: push_nn<0>(); break;
             case 0xc6: add<8>(); break;
+            case 0xc7: rst<0>(); break;
             case 0xc8: ret_cc<1>(); break;
             case 0xc9: ret(); break;
             case 0xca: j_cc_n<1>(); break;
             case 0xcc: call_cc_nn<1>(); break;
             case 0xcd: call_nn(); break;
             case 0xce: adc<8>(); break;
+            case 0xcf: rst<1>(); break;
             case 0xd0: ret_cc<2>(); break;
             case 0xd1: pop_nn<1>(); break;
             case 0xd2: j_cc_n<2>(); break;
             case 0xd4: call_cc_nn<2>(); break;
             case 0xd5: push_nn<1>(); break;
             case 0xd6: sub<8>(); break;
+            case 0xd7: rst<2>(); break;
             case 0xd8: ret_cc<3>(); break;
             case 0xd9: reti(); break;
             case 0xda: j_cc_n<3>(); break;
             case 0xdc: call_cc_nn<3>(); break;
             case 0xde: sbc<8>(); break;
+            case 0xdf: rst<3>(); break;
             case 0xe2: ld_c_a(); break;
             case 0xe0: ldh_n_a(); break;
             case 0xe1: pop_nn<2>(); break;
             case 0xe5: push_nn<2>(); break;
             case 0xe6: and_<8>(); break;
+            case 0xe7: rst<4>(); break;
             case 0xe8: add_sp_n(); break;
             case 0xe9: jp_hl(); break;
             case 0xea: ld_nn_a(); break;
             case 0xee: xor_<8>(); break;
+            case 0xef: rst<5>(); break;
             case 0xf0: ldh_a_n(); break;
             case 0xf1: pop_nn<3>(); break;
             case 0xf6: or_<8>(); break;
+            case 0xf7: rst<6>(); break;
             case 0xf8: ld_hl_sp_n(); break;
             case 0xf9: ld_sp_hl(); break;
             case 0xfa: ld_a_nn(); break;
@@ -263,6 +271,7 @@ private:
             case 0xf5: push_nn<3>(); break;
             case 0xfb: ei(); break;
             case 0xfe: cp<8>(); break;
+            case 0xff: rst<7>(); break;
             default:
                 std::cout << "unimplemented " << op;
         }
@@ -295,6 +304,16 @@ private:
             default:
                 std::cout << "unimplemented " << op;
         }
+    }
+
+    void stop() {
+//        throw std::runtime_error("Not implemented! (0x10 stop)");
+    }
+
+    template<u8 n>
+    void rst() {
+        push(registers.pc);
+        registers.pc = 8 * n;
     }
 
     void daa() {

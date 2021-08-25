@@ -71,8 +71,44 @@ private:
     bool halted = false;
     bool interrupt_enabled = true;
 
+    void print_debug(u8 op) const {
+        // std::setw(2) << std::setfill('0')
+        setbuf(stdout, nullptr);
+        std::cout
+        << "A: " << std::hex << std::uppercase << std::noboolalpha << (uint) registers.a
+        << " B: " << (uint) registers.b
+        << " C: " << (uint) registers.c
+        << " D: " << (uint) registers.d << std::endl;
+        std::cout
+        << "E: " << (uint) registers.e
+        << " F: " << (uint) registers.f
+        << " H: " << (uint) registers.h
+        << " L: " << (uint) registers.l << std::endl;
+        std::cout
+        << "PC: " << (uint) registers.pc - 1
+        << " SP: " << (uint) registers.sp << std::endl;
+        std::cout
+        << "Z: " << read_flag(Flag::Zero)
+        << " N: " << read_flag(Flag::Negative)
+        << " H: " << read_flag(Flag::HalfCarry)
+        << " C: " << read_flag(Flag::Carry) << std::endl;
+        std::cout << "Next instruction to execute: " << (uint) op;
+        std::cout << std::endl;
+        std::cout << std::endl;
+        std::cout << "All interrupts Enabled: " << std::boolalpha << interrupt_enabled << std::endl;
+        std::cout << "halted: " << halted << std::endl;
+        std::cout << "---------------------------------" << std::endl;
+    }
+
     size_t exec() {
         u8 op = read_u8();
+        print_debug(op);
+        // todo alu adc etc carries are wrong
+
+//        if (registers.pc -1 == 0xc0c3) // enters call for printing op
+//            std::cout << "pause" << std::endl;
+//        if (registers.pc -1 == 0xc06a) // unimplemented?
+//            std::cout << "pause" << std::endl;
 
         switch (op) {
             case 0x00: break;
@@ -214,50 +250,54 @@ private:
     // alu
     template<u8 r>
     void add() {
-        u16 x = registers.a + r_get<r>();
+        u8 n = r_get<r>();
+        u16 x = registers.a + n;
         u8 result = static_cast<u8>(x);
 
         set_flag(Flag::Zero, CPU::is_result_zero(result));
         set_flag(Flag::Negative, false);
-        set_flag(Flag::HalfCarry, CPU::is_carry_from_bit(3, registers.a, r_get<r>()));
-        set_flag(Flag::Carry, CPU::is_carry_from_bit(7, registers.a, r_get<r>()));
+        set_flag(Flag::HalfCarry, CPU::is_carry_from_bit(3, registers.a, n));
+        set_flag(Flag::Carry, CPU::is_carry_from_bit(7, registers.a, n));
 
         registers.a = result;
     }
 
     template<u8 r>
     void adc() {
-        u16 x = registers.a + r_get<r>() + read_flag(Flag::Carry);
+        u8 n = r_get<r>();
+        u16 x = registers.a + n + read_flag(Flag::Carry);
         u8 result = static_cast<u8>(x);
 
         set_flag(Flag::Zero, CPU::is_result_zero(result));
         set_flag(Flag::Negative, false);
-        set_flag(Flag::HalfCarry, CPU::is_carry_from_bit(3, registers.a, r_get<r>()));
-        set_flag(Flag::Carry, CPU::is_carry_from_bit(7, registers.a, r_get<r>()));
+        set_flag(Flag::HalfCarry, CPU::is_carry_from_bit(3, registers.a, n));
+        set_flag(Flag::Carry, CPU::is_carry_from_bit(7, registers.a, n));
 
         registers.a = result;
     }
 
     template<u8 r>
     void sub() {
-        u8 result = registers.a - r_get<r>();
+        u8 n = r_get<r>();
+        u8 result = registers.a - n;
 
         set_flag(Flag::Zero, CPU::is_result_zero(result));
         set_flag(Flag::Negative, true);
-        set_flag(Flag::HalfCarry, CPU::is_no_borrow_from_bit(4, registers.a, r_get<r>()));
-        set_flag(Flag::Carry, CPU::is_no_borrow_from_bit(8, registers.a, r_get<r>()));
+        set_flag(Flag::HalfCarry, CPU::is_no_borrow_from_bit(4, registers.a, n));
+        set_flag(Flag::Carry, CPU::is_no_borrow_from_bit(8, registers.a, n));
 
         registers.a = result;
     }
 
     template<u8 r>
     void sbc() {
-        u8 result = registers.a - r_get<r>() - read_flag(Flag::Carry);
+        u8 n = r_get<r>();
+        u8 result = registers.a - n - read_flag(Flag::Carry);
 
         set_flag(Flag::Zero, CPU::is_result_zero(result));
         set_flag(Flag::Negative, true);
-        set_flag(Flag::HalfCarry, CPU::is_no_borrow_from_bit(4, registers.a, r_get<r>()));
-        set_flag(Flag::Carry, CPU::is_no_borrow_from_bit(1, registers.a, r_get<r>()));
+        set_flag(Flag::HalfCarry, CPU::is_no_borrow_from_bit(4, registers.a, n));
+        set_flag(Flag::Carry, CPU::is_no_borrow_from_bit(1, registers.a, n));
 
         registers.a = result;
     }
@@ -294,10 +334,11 @@ private:
 
     template<u8 r>
     void cp() {
-        set_flag(Flag::Zero, registers.a == r_get<r>());
+        u8 n = r_get<r>();
+        set_flag(Flag::Zero, registers.a == n);
         set_flag(Flag::Negative, true);
-        set_flag(Flag::HalfCarry, CPU::is_no_borrow_from_bit(4, registers.a, r_get<r>()));
-        set_flag(Flag::Carry, CPU::is_no_borrow_from_bit(8, registers.a, r_get<r>()));
+        set_flag(Flag::HalfCarry, CPU::is_no_borrow_from_bit(4, registers.a, n));
+        set_flag(Flag::Carry, CPU::is_no_borrow_from_bit(8, registers.a, n));
     }
 
     template<u8 p>
@@ -419,20 +460,24 @@ private:
 
     template <u8 r>
     void inc_r() {
-        r_set<r>(r_get<r>() + 1);
+        u8 result = r_get<r>() + 1;
 
-        set_flag(Flag::Zero, CPU::is_result_zero(r_get<r>()));
+        set_flag(Flag::Zero, CPU::is_result_zero(result));
         set_flag(Flag::Negative, false);
-        set_flag(Flag::HalfCarry, CPU::is_carry_from_bit(3, r_get<r>()));
+        set_flag(Flag::HalfCarry, CPU::is_carry_from_bit(3, r_get<r>(), 1));
+
+        r_set<r>(result);
     }
 
     template <u8 r>
     void dec_r() {
-        r_set<r>(r_get<r>() - 1);
+        u8 result = r_get<r>() - 1;
 
-        set_flag(Flag::Zero, CPU::is_result_zero(r_get<r>()));
+        set_flag(Flag::Zero, CPU::is_result_zero(result));
         set_flag(Flag::Negative, true);
         set_flag(Flag::HalfCarry, CPU::is_no_borrow_from_bit(4, r_get<r>()));
+
+        r_set<r>(result);
     }
 
     template <u8 r>
@@ -569,14 +614,14 @@ private:
     }
 
     template<typename T = u8, typename S = u8>
-    static inline bool is_carry_from_bit(u8 bit, T op1, S op2 = 1) {
-        // bit: rightmost bit, counting to the left side and starting at 1
-        u8 mask = (1 << (bit - 1)) - 1;
+    static inline bool is_carry_from_bit(u8 bit, T op1, S op2) {
+        // bit: counting right to left and starting at 0
+        u8 mask = (1 << (bit + 1)) - 1;
         return ((op1 & mask) + (op2 & mask)) > mask;
     }
 
     static inline bool is_no_borrow_from_bit(u16 bit, u8 op1, u8 op2 = 1) {
-        // bit: rightmost bit, counting to the left side and starting at 1
+        // bit: counting right to left and starting at 0
         u8 mask = static_cast<u8>((1 << bit) - 1);
         return (op1 & mask) < (op2 & mask);
     }

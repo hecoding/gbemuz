@@ -304,9 +304,109 @@ private:
             case 0x39: rot<7, 1>() ;break; case 0x3a: rot<7, 2>() ;break; case 0x3b: rot<7, 3>() ;break;
             case 0x3c: rot<7, 4>() ;break; case 0x3d: rot<7, 5>() ;break; case 0x3e: rot<7, 6>() ;break;
             case 0x3f: rot<7, 7>() ;break;
+            case 0x40: bit<0, 0>() ;break; case 0x41: bit<0, 1>() ;break; case 0x42: bit<0, 2>() ;break;
+            case 0x43: bit<0, 3>() ;break; case 0x44: bit<0, 4>() ;break; case 0x45: bit<0, 5>() ;break;
+            case 0x46: bit<0, 6>() ;break; case 0x47: bit<0, 7>() ;break; case 0x48: bit<1, 0>() ;break;
+            case 0x49: bit<1, 1>() ;break; case 0x4a: bit<1, 2>() ;break; case 0x4b: bit<1, 3>() ;break;
+            case 0x4c: bit<1, 4>() ;break; case 0x4d: bit<1, 5>() ;break; case 0x4e: bit<1, 6>() ;break;
+            case 0x4f: bit<1, 7>() ;break; case 0x50: bit<2, 0>() ;break; case 0x51: bit<2, 1>() ;break;
+            case 0x52: bit<2, 2>() ;break; case 0x53: bit<2, 3>() ;break; case 0x54: bit<2, 4>() ;break;
+            case 0x55: bit<2, 5>() ;break; case 0x56: bit<2, 6>() ;break; case 0x57: bit<2, 7>() ;break;
+            case 0x58: bit<3, 0>() ;break; case 0x59: bit<3, 1>() ;break; case 0x5a: bit<3, 2>() ;break;
+            case 0x5b: bit<3, 3>() ;break; case 0x5c: bit<3, 4>() ;break; case 0x5d: bit<3, 5>() ;break;
+            case 0x5e: bit<3, 6>() ;break; case 0x5f: bit<3, 7>() ;break; case 0x60: bit<4, 0>() ;break;
+            case 0x61: bit<4, 1>() ;break; case 0x62: bit<4, 2>() ;break; case 0x63: bit<4, 3>() ;break;
+            case 0x64: bit<4, 4>() ;break; case 0x65: bit<4, 5>() ;break; case 0x66: bit<4, 6>() ;break;
+            case 0x67: bit<4, 7>() ;break; case 0x68: bit<5, 0>() ;break; case 0x69: bit<5, 1>() ;break;
+            case 0x6a: bit<5, 2>() ;break; case 0x6b: bit<5, 3>() ;break; case 0x6c: bit<5, 4>() ;break;
+            case 0x6d: bit<5, 5>() ;break; case 0x6e: bit<5, 6>() ;break; case 0x6f: bit<5, 7>() ;break;
+            case 0x70: bit<6, 0>() ;break; case 0x71: bit<6, 1>() ;break; case 0x72: bit<6, 2>() ;break;
+            case 0x73: bit<6, 3>() ;break; case 0x74: bit<6, 4>() ;break; case 0x75: bit<6, 5>() ;break;
+            case 0x76: bit<6, 6>() ;break; case 0x77: bit<6, 7>() ;break; case 0x78: bit<7, 0>() ;break;
+            case 0x79: bit<7, 1>() ;break; case 0x7a: bit<7, 2>() ;break; case 0x7b: bit<7, 3>() ;break;
+            case 0x7c: bit<7, 4>() ;break; case 0x7d: bit<7, 5>() ;break; case 0x7e: bit<7, 6>() ;break;
+            case 0x7f: bit<7, 7>() ;break;
+            case 0x80: res<0, 0>() ;break; case 0x81: res<0, 1>() ;break; case 0x82: res<0, 2>() ;break;
+            case 0x83: res<0, 3>() ;break; case 0x84: res<0, 4>() ;break; case 0x85: res<0, 5>() ;break;
+            case 0x86: res<0, 6>() ;break; case 0x87: res<0, 7>() ;break; case 0x88: res<1, 0>() ;break;
+            case 0x89: res<1, 1>() ;break; case 0x8a: res<1, 2>() ;break; case 0x8b: res<1, 3>() ;break;
+            case 0x8c: res<1, 4>() ;break; case 0x8d: res<1, 5>() ;break; case 0x8e: res<1, 6>() ;break;
+            case 0x8f: res<1, 7>() ;break; case 0x90: res<2, 0>() ;break; case 0x91: res<2, 1>() ;break;
+            case 0x92: res<2, 2>() ;break; case 0x93: res<2, 3>() ;break; case 0x94: res<2, 4>() ;break;
+            case 0x95: res<2, 5>() ;break; case 0x96: res<2, 6>() ;break; case 0x97: res<2, 7>() ;break;
+            case 0x98: res<3, 0>() ;break; case 0x99: res<3, 1>() ;break; case 0x9a: res<3, 2>() ;break;
+            case 0x9b: res<3, 3>() ;break; case 0x9c: res<3, 4>() ;break; case 0x9d: res<3, 5>() ;break;
+            case 0x9e: res<3, 6>() ;break; case 0x9f: res<3, 7>() ;break; case 0xa0: res<4, 0>() ;break;
+            case 0xa1: res<4, 1>() ;break; case 0xa2: res<4, 2>() ;break; case 0xa3: res<4, 3>() ;break;
+            case 0xa4: res<4, 4>() ;break; case 0xa5: res<4, 5>() ;break; case 0xa6: res<4, 6>() ;break;
+            case 0xa7: res<4, 7>() ;break; case 0xa8: res<5, 0>() ;break; case 0xa9: res<5, 1>() ;break;
+            case 0xaa: res<5, 2>() ;break; case 0xab: res<5, 3>() ;break; case 0xac: res<5, 4>() ;break;
+            case 0xad: res<5, 5>() ;break; case 0xae: res<5, 6>() ;break; case 0xaf: res<5, 7>() ;break;
+            case 0xb0: res<6, 0>() ;break; case 0xb1: res<6, 1>() ;break; case 0xb2: res<6, 2>() ;break;
+            case 0xb3: res<6, 3>() ;break; case 0xb4: res<6, 4>() ;break; case 0xb5: res<6, 5>() ;break;
+            case 0xb6: res<6, 6>() ;break; case 0xb7: res<6, 7>() ;break; case 0xb8: res<7, 0>() ;break;
+            case 0xb9: res<7, 1>() ;break; case 0xba: res<7, 2>() ;break; case 0xbb: res<7, 3>() ;break;
+            case 0xbc: res<7, 4>() ;break; case 0xbd: res<7, 5>() ;break; case 0xbe: res<7, 6>() ;break;
+            case 0xbf: res<7, 7>() ;break;
+            case 0xc0: set<0, 0>() ;break; case 0xc1: set<0, 1>() ;break; case 0xc2: set<0, 2>() ;break;
+            case 0xc3: set<0, 3>() ;break; case 0xc4: set<0, 4>() ;break; case 0xc5: set<0, 5>() ;break;
+            case 0xc6: set<0, 6>() ;break; case 0xc7: set<0, 7>() ;break; case 0xc8: set<1, 0>() ;break;
+            case 0xc9: set<1, 1>() ;break; case 0xca: set<1, 2>() ;break; case 0xcb: set<1, 3>() ;break;
+            case 0xcc: set<1, 4>() ;break; case 0xcd: set<1, 5>() ;break; case 0xce: set<1, 6>() ;break;
+            case 0xcf: set<1, 7>() ;break; case 0xd0: set<2, 0>() ;break; case 0xd1: set<2, 1>() ;break;
+            case 0xd2: set<2, 2>() ;break; case 0xd3: set<2, 3>() ;break; case 0xd4: set<2, 4>() ;break;
+            case 0xd5: set<2, 5>() ;break; case 0xd6: set<2, 6>() ;break; case 0xd7: set<2, 7>() ;break;
+            case 0xd8: set<3, 0>() ;break; case 0xd9: set<3, 1>() ;break; case 0xda: set<3, 2>() ;break;
+            case 0xdb: set<3, 3>() ;break; case 0xdc: set<3, 4>() ;break; case 0xdd: set<3, 5>() ;break;
+            case 0xde: set<3, 6>() ;break; case 0xdf: set<3, 7>() ;break; case 0xe0: set<4, 0>() ;break;
+            case 0xe1: set<4, 1>() ;break; case 0xe2: set<4, 2>() ;break; case 0xe3: set<4, 3>() ;break;
+            case 0xe4: set<4, 4>() ;break; case 0xe5: set<4, 5>() ;break; case 0xe6: set<4, 6>() ;break;
+            case 0xe7: set<4, 7>() ;break; case 0xe8: set<5, 0>() ;break; case 0xe9: set<5, 1>() ;break;
+            case 0xea: set<5, 2>() ;break; case 0xeb: set<5, 3>() ;break; case 0xec: set<5, 4>() ;break;
+            case 0xed: set<5, 5>() ;break; case 0xee: set<5, 6>() ;break; case 0xef: set<5, 7>() ;break;
+            case 0xf0: set<6, 0>() ;break; case 0xf1: set<6, 1>() ;break; case 0xf2: set<6, 2>() ;break;
+            case 0xf3: set<6, 3>() ;break; case 0xf4: set<6, 4>() ;break; case 0xf5: set<6, 5>() ;break;
+            case 0xf6: set<6, 6>() ;break; case 0xf7: set<6, 7>() ;break; case 0xf8: set<7, 0>() ;break;
+            case 0xf9: set<7, 1>() ;break; case 0xfa: set<7, 2>() ;break; case 0xfb: set<7, 3>() ;break;
+            case 0xfc: set<7, 4>() ;break; case 0xfd: set<7, 5>() ;break; case 0xfe: set<7, 6>() ;break;
+            case 0xff: set<7, 7>() ;break;
             default:
                 std::cout << "unimplemented " << op;
         }
+    }
+
+    template<u8 n_bit, u8 r>
+    void bit() {
+        set_flag(Flag::Zero, !get_register_bit<n_bit, r>());
+        set_flag(Flag::Negative, false);
+        set_flag(Flag::HalfCarry, true);
+    }
+
+    template<u8 n_bit, u8 r>
+    void res() {
+        set_register_bit<n_bit, r, false>();
+    }
+
+    template<u8 n_bit, u8 r>
+    void set() {
+        set_register_bit<n_bit, r>();
+    }
+
+    template<u8 bit, u8 r>
+    inline bool get_register_bit() {
+        return r_get<r>() & (1 << bit);
+    }
+
+    template<u8 bit, u8 r, bool value = true>
+    void set_register_bit() {
+        u8 reg = r_get<r>();
+        u8 mask = 1 << bit;
+        if (value)
+            reg |= mask;
+        else
+            reg &= ~mask;
+
+        r_set<r>(reg);
     }
 
     void cpl() {

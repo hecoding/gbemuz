@@ -123,7 +123,7 @@ private:
             case 0x04: inc_r<0>(); break;
             case 0x05: dec_r<0>(); break;
             case 0x06: ld_r_n<0>(); break;
-            case 0x07: rot<0, 7>(); break;
+            case 0x07: rot<0, 7>(); set_flag(Flag::Zero, false); break;
             case 0x08: ld_nn_sp(); break;
             case 0x09: add_hl_n<0>(); break;
             case 0x0a: ldid_nn_a<0>(); break;
@@ -131,7 +131,7 @@ private:
             case 0x0c: inc_r<1>(); break;
             case 0x0d: dec_r<1>(); break;
             case 0x0e: ld_r_n<1>(); break;
-            case 0x0f: rot<1, 7>(); break;
+            case 0x0f: rot<1, 7>(); set_flag(Flag::Zero, false); break;
             case 0x10: stop(); break;
             case 0x11: ld_rp_nn<1>(); break;
             case 0x12: ldid_a_nn<1>(); break;
@@ -139,7 +139,7 @@ private:
             case 0x14: inc_r<2>(); break;
             case 0x15: dec_r<2>(); break;
             case 0x16: ld_r_n<2>(); break;
-            case 0x17: rot<2, 7>(); break;
+            case 0x17: rot<2, 7>(); set_flag(Flag::Zero, false); break;
             case 0x18: jr_n(); break;
             case 0x19: add_hl_n<1>(); break;
             case 0x1a: ldid_nn_a<1>(); break;
@@ -147,7 +147,7 @@ private:
             case 0x1c: inc_r<3>(); break;
             case 0x1d: dec_r<3>(); break;
             case 0x1e: ld_r_n<3>(); break;
-            case 0x1f: rot<3, 7>(); break;
+            case 0x1f: rot<3, 7>(); set_flag(Flag::Zero, false); break;
             case 0x20: j_cc_n<0, true>(); break;
             case 0x21: ld_rp_nn<2>(); break;
             case 0x22: ldid_a_nn<2>(); break;

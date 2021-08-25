@@ -15,8 +15,8 @@ int main() {
 //    Cartrigde cart("../../gbemu/roms/cpu_instrs/individual/06-ld r,r.gb"); // pass
 //    Cartrigde cart("../../gbemu/roms/cpu_instrs/individual/07-jr,jp,call,ret,rst.gb"); // unimplemented
 //    Cartrigde cart("../../gbemu/roms/cpu_instrs/individual/08-misc instrs.gb"); // unimplemented
-//    Cartrigde cart("../../gbemu/roms/cpu_instrs/individual/09-op r,r.gb"); // unimplemented
-    Cartrigde cart("../../gbemu/roms/cpu_instrs/individual/10-bit ops.gb"); // pass
+//    Cartrigde cart("../../gbemu/roms/cpu_instrs/individual/09-op r,r.gb"); // pass
+//    Cartrigde cart("../../gbemu/roms/cpu_instrs/individual/10-bit ops.gb"); // pass
 //    Cartrigde cart("../../gbemu/roms/cpu_instrs/individual/11-op a,(hl).gb"); // passed
     MMU mmu(cart);
     CPU cpu(mmu);

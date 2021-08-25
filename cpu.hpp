@@ -297,11 +297,12 @@ private:
     void add_hl_n() {
         u16 n = rp<r>();
         u32 x = registers.hl + n;
-        rp<r>() = static_cast<u16>(x);
 
         set_flag(Flag::Negative, false);
         set_flag(Flag::HalfCarry, CPU::is_carry_from_bit(11, registers.hl, n));
         set_flag(Flag::Carry, CPU::is_carry_from_bit(15, registers.hl, n));
+
+        registers.hl = static_cast<u16>(x);
     }
 
     void add_sp_n() {

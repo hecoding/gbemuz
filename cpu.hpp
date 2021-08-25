@@ -654,7 +654,10 @@ private:
 
     template<u8 p>
     void pop_nn() {
-        rp2<p>() = pop();
+        if constexpr(p == 3) // ignore 0-3 bit in AF
+            rp2<p>() = pop() & 0xFFF0;
+        else
+            rp2<p>() = pop();
     }
 
     void ret() {

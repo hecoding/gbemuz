@@ -124,6 +124,7 @@ private:
             case 0x05: dec_r<0>(); break;
             case 0x06: ld_r_n<0>(); break;
             case 0x07: rot<0, 7>(); break;
+            case 0x08: ld_nn_sp(); break;
             case 0x09: add_hl_n<0>(); break;
             case 0x0a: ldid_nn_a<0>(); break;
             case 0x0b: dec_rr<0>(); break;
@@ -249,6 +250,8 @@ private:
             case 0xf0: ldh_a_n(); break;
             case 0xf1: pop_nn<3>(); break;
             case 0xf6: or_<8>(); break;
+            case 0xf8: ld_hl_sp_n(); break;
+            case 0xf9: ld_sp_hl(); break;
             case 0xfa: ld_a_nn(); break;
             case 0xf2: ld_a_c(); break;
             case 0xf3: di(); break;
@@ -289,6 +292,27 @@ private:
         }
     }
 
+    void ld_hl_sp_n() {
+        s8 n = read_s8();
+
+        set_flag(Flag::Zero, false);
+        set_flag(Flag::Negative, false);
+        set_flag(Flag::HalfCarry, CPU::is_signed_carry(4, registers.sp, n));
+        set_flag(Flag::Carry, CPU::is_signed_carry(8, registers.sp, n));
+
+        registers.hl = registers.sp + n;
+    }
+
+    void ld_sp_hl() {
+        registers.sp = registers.hl;
+    }
+
+    void ld_nn_sp() {
+        u16 nn = read_u16();
+        mmu.write(nn, registers.sp & 0x00FF);
+        mmu.write(nn + 1, (registers.sp & 0xFF00) >> 8);
+    }
+
     void jp_hl() {
         registers.pc = registers.hl;
     }
@@ -310,8 +334,8 @@ private:
 
         set_flag(Flag::Zero, false);
         set_flag(Flag::Negative, false);
-        set_flag(Flag::HalfCarry, CPU::is_carry_from_bit(4, registers.sp, n));
-        set_flag(Flag::Carry, CPU::is_carry_from_bit(8, registers.sp, n));
+        set_flag(Flag::HalfCarry, CPU::is_signed_carry(4, registers.sp, n));
+        set_flag(Flag::Carry, CPU::is_signed_carry(8, registers.sp, n));
 
         registers.sp += n;
     }
@@ -739,6 +763,11 @@ private:
         // bit: counting right to left and starting at 0
         u8 mask = static_cast<u8>((1 << bit) - 1);
         return ((op1 & mask) - (op2 & mask) - carry) < 0;
+    }
+
+    static inline bool is_signed_carry(u8 bit, u16 r, s8 n) {
+        u16 mask = 1 << bit;
+        return ((r ^ n ^ ((r + n) & 0xFFFF)) & mask) == mask;
     }
 
     u8 read_u8() {
